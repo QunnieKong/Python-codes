@@ -1,0 +1,66 @@
+# 降至2维、3维绘制散点图
+# 降维方法：PCA，Isomap
+
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
+
+# 降维结果与activity合并
+def cob_act(low_dim_data, activity, dim):
+    if dim == 2:
+        res = pd.DataFrame(low_dim_data, columns=['comp1', 'comp2'])
+    else:
+        res = pd.DataFrame(low_dim_data, columns=['comp1', 'comp2', 'comp3'])
+    frames = [res, activity]
+    res = pd.concat(frames, axis=1)
+    return res
+
+# 划分降维结果为17类,并绘制
+def show_plt2(data, act):
+    dfs = pd.DataFrame
+    classes = act.drop_duplicates()
+    f1 = plt.figure(1)
+    for i in classes:
+        dots = data[data['activity']==i]
+        dots = dots.drop('activity', axis=1).as_matrix()
+        plt.scatter(dots[:,0], dots[:,1], s=10, label=i)
+    plt.legend()
+    plt.show()
+
+def show_plt3(data, act):
+    dfs = pd.DataFrame
+    classes = act.drop_duplicates()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for i in classes:
+        dots = data[data['activity']==i]
+        dots = dots.drop('activity', axis=1).as_matrix()
+        ax.scatter(dots[:,0], dots[:,1], dots[:,2], s=10, label=i)
+    # plt.legend()
+    plt.show()
+
+# 读取数据
+def get_data():
+    data = pd.read_csv('Data.csv')
+    labels = data['activity']
+    classes = list(labels.drop_duplicates())
+    classNum = classes.__len__()
+    features = data.drop('activity', axis=1)
+    return features, labels, classes, classNum
+
+features, activity, classes, classNum = get_data()
+
+# 降维——2维
+pca = PCA(n_components=2)
+pca.fit(features)
+pca_res2 = cob_act(pca.transform(features), activity, 2)
+# show_plt2(pca_res2, activity)
+
+# 降维——3维
+pca = PCA(n_components=3)
+pca.fit(features)
+pca_res2 = cob_act(pca.transform(features), activity, 3)
+show_plt3(pca_res2, activity)
