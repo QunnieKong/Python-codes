@@ -1,0 +1,86 @@
+# CFSFDP聚类算法
+# [1] Alex Rodriguez and Alessandro Laio:Clustering by fast search and find of density peaks
+# 一个很巧妙又很有道理的聚类算法，部分代码来源于网络
+# 目前我对这段代码的正确性持怀疑态度，积极找错中
+
+import pandas as pd
+import numpy as np
+from sklearn import neighbors
+from sklearn.metrics import pairwise
+
+
+# 计算正确率
+def get_accuracy(data_true, data_predict, l):
+    hitnum = 0
+    j = -1
+    for i in data_true.index:
+        j = j+1
+        if data_true[i] == data_predict[j]:
+            hitnum = hitnum + 1
+    return hitnum/l
+
+
+# 将预测结果与值对应
+def get_predict(inds, classes, len):
+    pre = []
+    for i in range(0,len):
+        pre.append(classes[inds[i]])
+    pd.DataFrame(pre, columns=['activity'])
+    return pre
+
+
+# 计算距离矩阵
+def get_distence_matrix(a, b):
+    bt = b.transpose()
+    vecprod = a * bt
+    sqa = a.getA()**2
+    sumsqa = np.matrix(np.sum(sqa, axis=1))
+    sumsqaex = np.tile(sumsqa.transpose(), (1, vecprod.shape[1]))
+    sqb = b.getA()**2
+    sumsqb = np.sum(sqb, axis=1)
+    sumsqbex = np.tile(sumsqb, (vecprod.shape[0], 1))
+    sqed = sumsqbex + sumsqaex - 2*vecprod
+    ed = (sqed.getA())**0.5
+    return np.matrix(ed)
+
+
+def knn_cluster(train, test, label_train, label_test, test_len):
+    clf = neighbors.KNeighborsClassifier()
+    clf.fit(train, label_train)
+    predict = clf.predict(test)
+    accuracy = get_accuracy(label_test, predict, test_len)
+    print("KNN正确率：", accuracy)
+    return accuracy, predict
+
+
+def cfsfdp(data, data_len):
+    # cutoff distance dc距离阈值
+    dc = 0.8
+    # 计算density：
+    # 1.计算距离矩阵
+    distance_matrix = pairwise.pairwise_distances(data)
+    # 2.计算每个点的local density
+    local_density = [0 for i in range(data_len)]
+    i = 0
+    for dm in distance_matrix:
+        for j in dm:
+            if j <= dc:
+                local_density[i] += 1
+        i += 1
+    # 3.计算每个点与更高密度点的distance
+    center_distance = [0 for i in range(data_len)]
+    i = 0
+    max_ld = max(local_density)
+    for j in local_density:
+        if j == max_ld:
+            center_distance[i] = max(distance_matrix[i])
+        else:
+            dis_min = max(distance_matrix[i])
+            for k in range(0, data_len):
+                if local_density[k]>local_density[i]:
+                    if distance_matrix[i][k]<dis_min:
+                        dis_min = distance_matrix[i][k]
+            center_distance[i] = dis_min
+        i += 1
+    return distance_matrix, local_density, center_distance
+
