@@ -19,4 +19,8 @@ Codes of machine learning using python.
 <h4>2dim_plot:散点图绘制</h4>
 <p>将数据降至2维或3维后绘制散点图，降维方法为Isomap和PCA[待补充]</p>
 </li>
+<li>
+<h4>ActivityRecognition：四种行为识别算法的打标和识别代码</h4>
+<p>四种算法分别为Naive，PNL，System-Supervised，SDVL。其中Dis-前缀代表用中心点距离改进后的算法。Labelling指Source打标结果，Recognition指Target识别结果。</p>
+</li>
 </ul>
